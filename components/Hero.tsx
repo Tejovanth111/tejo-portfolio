@@ -1,7 +1,12 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import DataNetwork from "@/components/DataNetwork";
+import dynamic from "next/dynamic";
+
+const DataNetwork = dynamic(() => import("@/components/DataNetwork"), {
+  ssr: false,
+  loading: () => <div className="network-visual" aria-hidden="true" />,
+});
 
 const reveal = {
   hidden: { opacity: 0, y: 22 },
@@ -31,9 +36,7 @@ export default function Hero() {
           variants={reveal}
           transition={{ duration: 0.9, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
         >
-          I turn business
-          <br className="desktop-break" /> questions into
-          <br className="desktop-break" /> data-driven <em>decisions.</em>
+          <span className="hero-accent-i">I</span> turn business questions<br className="desktop-break" /> into data-driven decisions.
         </motion.h1>
         <motion.p
           className="hero-description"
@@ -42,8 +45,8 @@ export default function Hero() {
           variants={reveal}
           transition={{ duration: 0.75, delay: 0.34, ease: [0.22, 1, 0.36, 1] }}
         >
-          Exploring how data, analytical thinking and technology can help
-          businesses make better decisions.
+          Business Analytics <span>·</span> Product Analytics <span>·</span>
+          <br /> Decision Science <span>·</span> Strategy &amp; Operations
         </motion.p>
         <motion.div
           className="hero-actions"
@@ -55,15 +58,15 @@ export default function Hero() {
           <a className="button button-primary" href="#work">
             Explore my work <span aria-hidden="true">↗</span>
           </a>
-          <a className="button button-secondary" href="#about">
-            About me <span aria-hidden="true">↗</span>
+          <a className="button button-secondary" href="#contact">
+            Let&apos;s talk <span aria-hidden="true">↗</span>
           </a>
         </motion.div>
       </div>
       <div className="hero-footer">
         <span>TEJOVANTH K</span>
         <motion.a
-          href="#work"
+          href="#how-i-think"
           className="scroll-cue"
           initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}

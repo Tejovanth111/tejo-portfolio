@@ -39,7 +39,7 @@ function NetworkObject() {
         <Line
           key={`${from}-${to}`}
           points={[points[from], points[to]]}
-          color="#6b7d9a"
+          color={from === 0 && to === 1 ? "#536789" : "#6b7d9a"}
           transparent
           opacity={0.32}
           lineWidth={0.7}
@@ -47,7 +47,11 @@ function NetworkObject() {
       ))}
       {points.map(([x, y, z], index) => (
         <Sphere key={index} position={[x, y, z]} args={[index % 4 === 0 ? 0.052 : 0.034, 16, 16]}>
-          <meshStandardMaterial color={index % 4 === 0 ? "#7184a1" : "#aab4c1"} roughness={0.38} metalness={0.12} />
+          <meshStandardMaterial
+            color={index === 4 ? "#a77368" : index === 10 ? "#bb8956" : index % 4 === 0 ? "#536789" : "#aab4c1"}
+            roughness={0.38}
+            metalness={0.12}
+          />
         </Sphere>
       ))}
     </group>
