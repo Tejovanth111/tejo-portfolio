@@ -47,12 +47,12 @@ function SequenceStep({
   const opacity = useTransform(
     progress,
     [Math.max(0, center - 0.16), center - 0.04, center + 0.04, Math.min(1, center + 0.16)],
-    [0.26, 1, 1, 0.26],
+    [0.82, 1, 1, 0.82],
   );
   const scale = useTransform(
     progress,
     [Math.max(0, center - 0.16), center - 0.04, center + 0.04, Math.min(1, center + 0.16)],
-    [0.97, 1, 1, 0.97],
+    [0.99, 1, 1, 0.99],
   );
 
   return (
