@@ -1,182 +1,197 @@
-const findings = [
-  {
-    number: "01",
-    id: "finding-cost-picture",
-    title: "The cost picture",
-    question: "How expensive is the typical observed remittance, and how much of that cost sits in the visible fee?",
-    answer: "The average observed total cost is 6.58%, while the median is 5.07%. The average is higher than the median, indicating that more expensive observations pull the distribution upward.",
-    figures: [
-      ["6.58%", "Average observed total cost"],
-      ["5.07%", "Median observed total cost"],
-      ["4.46%", "Average fee"],
-      ["2.12%", "Average FX margin"],
-    ],
-    soWhat: "The visible fee is only part of the story. Treating the fee as the whole cost leaves a meaningful part of the pricing structure unexplained.",
-    implementation: "A pricing team could monitor total transfer cost as separate fee and FX components across corridors and transfer amounts. In a production setting, that view could help identify which component is driving changes in customer cost.",
-  },
-  {
-    number: "02",
-    id: "finding-benchmark",
-    title: "The benchmark",
-    question: "How far does provider FX pricing sit from an external benchmark?",
-    answer: "The provider-versus-BIS normalised spread had a mean of 1.87% and a median of 1.39% across 48,097 benchmark observations.",
-    figures: [["1.87%", "Mean normalised spread"], ["1.39%", "Median normalised spread"], ["48,097", "Benchmark observations"]],
-    soWhat: "The benchmark creates a consistent reference frame. A positive spread is not automatically excessive, and this comparison is not a profitability calculation.",
-    implementation: "A provider could monitor movement in FX pricing by corridor, currency pair or period. The benchmark would serve as a monitoring reference, not a measure of provider profit or exact margin.",
-  },
-  {
-    number: "03",
-    id: "finding-corridor-variation",
-    title: "Corridor variation",
-    question: "Does the average tell the whole story?",
-    answer: "No. Pricing varies substantially across corridor and provider combinations. Among qualifying TZAUGA provider observations, median total-cost values ranged from 4.78% to 50.93%.",
-    figures: [["4.78% → 50.93%", "Observed provider median range in qualifying TZAUGA observations"]],
-    soWhat: "A single global pricing assumption can hide very different economic environments. The spread warrants corridor-level investigation, without labelling a corridor bad or inferring profitability or customer dissatisfaction.",
-    implementation: "A pricing or strategy team could rank corridors by observed total cost, sample size, fee component, FX component and benchmark spread. This would help distinguish persistent patterns from isolated observations.",
-  },
-  {
-    number: "04",
-    id: "finding-high-cost-corridors",
-    title: "Where a closer look could begin",
-    question: "Where should deeper investigation begin?",
-    answer: "For corridors with at least 100 observations, the analysis identified TURBGR, TZAUGA, TZAKEN, TZARWA and ZAFCHN as a screening set.",
-    figures: [["5 corridors", "Screening set with at least 100 observations"]],
-    soWhat: "These corridors combine relatively high observed pricing with enough observations to avoid relying entirely on very small samples. They are starting points for review, not declarations of commercial unattractiveness.",
-    implementation: "A threshold-based review could combine a minimum observation count, high observed total cost, large FX spread and persistent movement over time. Meeting those conditions could prompt a deeper corridor review.",
-  },
-  {
-    number: "05",
-    id: "finding-fx-scenario",
-    title: "The FX margin scenario",
-    question: "What happens if the FX margin moves?",
-    answer: "Reducing the FX margin by 0.50 percentage points produces a modeled saving of approximately $1.00 on a $200 transfer.",
-    figures: [["≈ $1.00", "Modeled saving on a $200 transfer"]],
-    soWhat: "The point is to establish the economic sensitivity of that decision variable. It is not a recommendation for every provider to make the same change.",
-    implementation: "A pricing team could vary transfer amount, current and proposed FX margin, corridor and currency pair to see customer-cost impact before approving a pricing decision. This is sensitivity analysis, not a forecast; it does not estimate customer response or revenue impact.",
-  },
-  {
-    number: "06",
-    id: "finding-fee-scenario",
-    title: "The fee scenario",
-    question: "What happens if the visible fee changes instead?",
-    answer: "Reducing the fee by 10% produces a modeled average saving of approximately $0.89 on a $200 transfer.",
-    figures: [["≈ $0.89", "Modeled average saving on a $200 transfer"]],
-    soWhat: "Comparing two pricing levers on the same transfer basis is more useful than assuming lower fees are always the better move.",
-    implementation: "A scenario matrix could compare FX margin changes of −0.25, −0.50 and −0.75 percentage points with fee changes of −5%, −10% and −15%, across transfer amounts and corridors. This is a decision-support model, not a demand forecast.",
-  },
-] as const;
-
 const operatingSteps = [
   "Monitor corridor pricing",
   "Decompose total cost",
-  "Benchmark FX pricing",
+  "Benchmark FX",
   "Flag unusual observations",
   "Run pricing scenarios",
   "Compare customer-cost impact",
   "Review commercial trade-offs",
-  "Approve or reject the pricing change",
+  "Approve / reject pricing change",
+] as const;
+
+const limitations = [
+  "RPW records surveyed prices, not customer transaction volumes.",
+  "Historical pricing does not automatically represent current market pricing.",
+  "Some pricing components contain missing values.",
+  "Fee + FX margin decomposition is approximate in places; reported total cost remains the authoritative measure.",
+  "Scenario analysis measures sensitivity, not a forecast or realised customer saving.",
+  "The analysis does not infer provider profitability.",
+  "Provider and corridor differences do not establish causality.",
 ] as const;
 
 export default function RemittanceStory() {
   return (
     <article className="remittance-story">
-      <section className="story-opening" aria-labelledby="story-opening-title">
-        <p className="eyebrow">THE BUSINESS SITUATION</p>
-        <h2 id="story-opening-title" className="editorial-heading">The price is rarely<br />just the <em>fee.</em></h2>
-        <div className="story-opening-copy">
-          <p>Sending money across borders looks simple from the outside: choose a provider, enter an amount, pay the fee, and the money arrives.</p>
-          <p>The economics underneath are less tidy. A transfer can become expensive through the fee the customer sees, the exchange-rate margin they may not, or both.</p>
-          <p>The interesting question is therefore not simply “Which transfers are expensive?” It is: <strong>Where does the cost actually come from, and which pricing lever is worth moving?</strong></p>
+      <section className="story-section story-question" id="question" aria-labelledby="question-title">
+        <div className="story-section-heading">
+          <p className="eyebrow">02 / THE QUESTION</p>
+          <h2 id="question-title" className="story-section-title">Where does the cost actually come from?</h2>
+        </div>
+        <div className="story-prose">
+          <p>The analysis separates the visible fee component from the less-visible FX component, then tests how changing each lever affects customer cost.</p>
+          <p>It studies pricing variation and customer-cost sensitivity. It does not identify an optimal price or maximise provider profit.</p>
         </div>
       </section>
 
-      <section className="story-context" aria-labelledby="story-context-title">
-        <div>
-          <p className="eyebrow">THE QUESTION</p>
-          <h2 id="story-context-title" className="story-section-title">If the objective is to reduce remittance cost, where is the economically meaningful pricing lever?</h2>
+      <section className="story-section story-evidence" aria-labelledby="evidence-title">
+        <div className="story-evidence-heading">
+          <p className="eyebrow">03 / THE EVIDENCE</p>
+          <h2 id="evidence-title" className="story-section-title">A broad view of surveyed pricing.</h2>
+          <p>The World Bank Remittance Prices Worldwide (RPW) current sheet covers 2016 Q2–2025 Q1. BIS exchange-rate data provides the FX benchmark reference.</p>
         </div>
-        <div className="story-context-copy">
-          <p>The same nominal transfer amount can carry very different costs depending on corridor, provider, pricing structure and exchange-rate treatment. Looking only at the advertised fee risks missing part of the economics; looking only at the exchange rate creates the opposite problem.</p>
-          <p>The useful task is to separate the components, establish a benchmark, and then ask what happens when one of those components moves. This is a pricing sensitivity problem, not simply a search for the cheapest provider.</p>
-        </div>
-        <ol className="supporting-questions">
-          <li><span>01</span> Corridor economics <small>How much does pricing vary across corridors and transfer contexts?</small></li>
-          <li><span>02</span> Cost composition <small>How much observed cost comes from the fee versus the FX margin?</small></li>
-          <li><span>03</span> Benchmarking <small>How far do provider exchange rates sit from an external benchmark?</small></li>
-          <li><span>04</span> Scenario sensitivity <small>What changes when a pricing component moves?</small></li>
-          <li><span>05</span> Commercial focus <small>Where are differences large enough to deserve attention?</small></li>
-        </ol>
-      </section>
-
-      <section className="story-evidence" aria-labelledby="evidence-title">
-        <div className="story-evidence-head">
-          <p className="eyebrow">THE EVIDENCE</p>
-          <h2 id="evidence-title" className="story-section-title">A broad view of surveyed pricing.<br /><em>Not transaction behaviour.</em></h2>
-          <p>The analysis uses World Bank Remittance Prices Worldwide surveyed pricing observations covering Q2 2016 to Q1 2025. These describe observed pricing across providers, corridors and periods—not customer transactions.</p>
-        </div>
-        <div className="project-scale story-scale" aria-label="Project data coverage">
-          {[["197,999", "Surveyed pricing observations"], ["372", "Corridors"], ["702", "Providers"], ["36", "Quarters"]].map(([value, label]) => (
-            <div className="scale-item" key={label}><span className="scale-value">{value}</span><span className="scale-label">{label}</span></div>
+        <div className="evidence-scale" aria-label="Dataset coverage">
+          {[
+            ["197,999", "surveyed pricing observations"],
+            ["372", "corridors"],
+            ["702", "providers"],
+            ["36", "quarters"],
+            ["51", "source countries"],
+            ["108", "destination countries"],
+          ].map(([value, label]) => (
+            <div className="evidence-scale-item" key={label}>
+              <strong>{value}</strong>
+              <span>{label}</span>
+            </div>
           ))}
         </div>
-        <div className="coverage-line"><span>51 source countries</span><span>108 destination countries</span><span>372 corridors</span><span>702 providers</span></div>
-        <p className="story-caveat">Surveyed pricing observations do not show how many customers made each transfer, which provider a customer chose, or how customers responded to a price change.</p>
+        <p className="evidence-caveat">These are surveyed pricing observations, not customer transactions or transaction volumes.</p>
       </section>
 
-      <section className="story-findings" id="findings" aria-labelledby="findings-title">
-        <p className="eyebrow">THE FINDINGS</p>
-        <h2 id="findings-title" className="editorial-heading">Six ways into<br /><em>the pricing question.</em></h2>
-        {findings.map((finding) => (
-          <section className="finding" id={finding.id} key={finding.number} aria-labelledby={`${finding.id}-title`}>
-            <div className="finding-heading"><span>{finding.number}</span><h3 id={`${finding.id}-title`}>{finding.title}</h3></div>
-            <div className="finding-body">
-              <div className="finding-answer"><p className="finding-label">QUESTION</p><h4>{finding.question}</h4><p className="finding-label">ANSWER</p><p>{finding.answer}</p></div>
-              <div className={`finding-figures finding-figures-${finding.figures.length}`}>
-                {finding.figures.map(([value, label]) => <div className="finding-figure" key={label}><strong>{value}</strong><span>{label}</span></div>)}
-              </div>
-              <div className="finding-explanation"><div><p className="finding-label">SO WHAT?</p><p>{finding.soWhat}</p></div><div><p className="finding-label">REAL-WORLD IMPLEMENTATION</p><p>{finding.implementation}</p></div></div>
-            </div>
-          </section>
-        ))}
+      <section className="story-section story-cost" id="cost-picture" aria-labelledby="cost-title">
+        <div className="story-section-heading">
+          <p className="eyebrow">04 / THE COST PICTURE</p>
+          <h2 id="cost-title" className="story-section-title">The customer-facing price is not just the fee.</h2>
+        </div>
+        <div className="cost-findings">
+          <div className="cost-leading-number">
+            <strong>6.58%</strong>
+            <span>Average observed total cost</span>
+          </div>
+          <div className="cost-supporting-numbers">
+            <div><strong>5.07%</strong><span>Median observed total cost</span></div>
+            <div><strong>$200</strong><span>Standardised transfer amount</span></div>
+          </div>
+        </div>
+        <div className="cost-decomposition">
+          <p className="eyebrow">ANALYTICAL DECOMPOSITION</p>
+          <div className="cost-decomposition-values">
+            <div><strong>4.46%</strong><span>Mean fee</span></div>
+            <span className="decomposition-plus" aria-hidden="true">+</span>
+            <div><strong>2.12%</strong><span>Mean FX margin</span></div>
+          </div>
+          <p>The reported total cost is the authoritative measure. Fee and FX margin are useful analytical components, but they are not an exact accounting identity across every observation. The FX margin can still represent a meaningful second component of transfer cost.</p>
+        </div>
       </section>
 
-      <section className="story-decision" aria-labelledby="trade-off-title">
-        <div><p className="eyebrow">THE TRADE-OFF</p><h2 id="trade-off-title" className="story-section-title">Which component moves the cost—and what does the business give up to move it?</h2></div>
-        <div><p>The question is not simply which component is larger. It is how sensitive the customer’s cost is to changing each component, where that sensitivity occurs, and what the business would be giving up to make the change.</p><p>The framework compares alternative scenarios instead of committing to one pricing intervention based on a headline average.</p></div>
+      <section className="story-section story-benchmark" aria-labelledby="benchmark-title">
+        <div className="story-section-heading">
+          <p className="eyebrow">05 / THE BENCHMARK</p>
+          <h2 id="benchmark-title" className="story-section-title">What does the FX price look like against a reference rate?</h2>
+          <p className="story-deck">A normalised provider-vs-BIS comparison gives the observed exchange-rate pricing a common reference point.</p>
+        </div>
+        <div className="benchmark-stats">
+          <div><strong>1.87%</strong><span>Mean provider-vs-BIS normalised spread</span></div>
+          <div><strong>1.39%</strong><span>Median provider-vs-BIS normalised spread</span></div>
+          <div><strong>48,097</strong><span>Benchmark observations</span></div>
+        </div>
+        <p className="story-qualification">This is a normalised benchmark comparison. It does not mean every provider’s customer-facing FX rate is directly equivalent to the BIS reference rate.</p>
       </section>
 
-      <section className="story-decision story-decision-final" aria-labelledby="decision-title">
-        <div><p className="eyebrow">THE DECISION</p><h2 id="decision-title" className="story-section-title">Find the source.<br />Measure the sensitivity.<br /><em>Then decide.</em></h2></div>
-        <div><p>The analysis points toward a more granular approach to remittance pricing. Total cost should be treated as a combination of visible fees and FX-related cost. Corridor and provider variation matters enough that one global pricing assumption can hide meaningful differences.</p><p>Scenario analysis gives a practical way to test changes before treating them as commercial decisions. The useful next step is to identify where cost comes from, quantify the sensitivity of each lever, and decide where a change is economically justified.</p></div>
-      </section>
-
-      <section className="operating-model" aria-labelledby="operating-title">
-        <p className="eyebrow">FROM ANALYSIS TO OPERATING DECISION</p>
-        <h2 id="operating-title" className="editorial-heading">A repeatable process,<br /><em>not a one-off answer.</em></h2>
-        <div className="operating-intro"><p>The analysis becomes useful when it can move from a one-off study into a repeatable decision process.</p><p>A real pricing organisation could turn the framework into a monitoring and scenario layer sitting above its existing pricing systems.</p></div>
-        <ol className="operating-steps">{operatingSteps.map((step, index) => <li key={step}><span>0{index + 1}</span>{step}</li>)}</ol>
-        <p className="operating-disclaimer">This project does not claim that this system has been implemented. It demonstrates what the analysis could become inside a real decision environment.</p>
-      </section>
-
-      <section className="story-limitations" aria-labelledby="limitations-title">
-        <div><p className="eyebrow">LIMITATIONS</p><h2 id="limitations-title" className="story-section-title">What the data can—and cannot—say.</h2></div>
-        <ul>
-          <li>The data contains surveyed pricing observations rather than customer transaction volumes. It cannot estimate customer switching, transaction demand, revenue impact or price elasticity.</li>
-          <li>The historical data describes observed pricing rather than today’s live market.</li>
-          <li>Separate fee and FX components are an approximate decomposition. Reported total cost remains the authoritative measure in the source data.</li>
-          <li>Scenario analysis is sensitivity analysis, not a forecast.</li>
-          <li>The provider-versus-BIS comparison is a benchmark, not evidence of provider profitability or margin.</li>
+      <section className="story-section story-corridors" aria-labelledby="corridor-title">
+        <div className="story-section-heading">
+          <p className="eyebrow">06 / CORRIDOR VARIATION</p>
+          <h2 id="corridor-title" className="story-section-title">Average pricing hides where the problem actually lives.</h2>
+          <p className="story-deck">Observed pricing varies by corridor and provider. Among corridors meeting the 100-observation threshold, the high-cost screening set includes:</p>
+        </div>
+        <ul className="corridor-list" aria-label="High-cost corridor screening set">
+          {["TURBGR", "TZAUGA", "TZAKEN", "TZARWA", "ZAFCHN"].map((corridor) => <li key={corridor}>{corridor}</li>)}
         </ul>
+        <div className="corridor-range">
+          <p className="eyebrow">PROVIDER MEDIAN TOTAL COST RANGE WITHIN TZAUGA</p>
+          <strong>4.78% <span aria-hidden="true">→</span> 50.93%</strong>
+          <p>Range across qualifying providers with at least 100 observations. This is provider-level variation within the TZAUGA corridor; it does not mean every transfer on that corridor costs 50.93%.</p>
+        </div>
       </section>
 
-      <section className="technical-note" id="technical-note" aria-labelledby="technical-title">
-        <p className="eyebrow">TECHNICAL NOTE</p><h2 id="technical-title" className="story-section-title">The analytical machinery.</h2>
-        <dl>{[["Python", "Data preparation, cleaning, analysis and scenario modelling."], ["SQL / DuckDB", "Analytical querying and structured data exploration."], ["Pandas / NumPy", "Transformation and statistical analysis."], ["Matplotlib / Seaborn", "Analytical visualisation."], ["World Bank RPW", "Remittance pricing observations."], ["BIS reference rates", "FX benchmarking."], ["Jupyter / Git / GitHub", "Analysis workflow and reproducibility."]].map(([tool, detail]) => <div key={tool}><dt>{tool}</dt><dd>{detail}</dd></div>)}</dl>
+      <section className="story-section story-scenario story-fx-scenario" aria-labelledby="fx-scenario-title">
+        <div className="story-section-heading">
+          <p className="eyebrow">07 / THE FX SCENARIO</p>
+          <h2 id="fx-scenario-title" className="story-section-title">What happens if the FX margin moves?</h2>
+          <p className="story-deck">A half-point change makes the customer-cost sensitivity concrete.</p>
+        </div>
+        <div className="scenario-result">
+          <span>−0.50 percentage points</span>
+          <strong>≈ $1.00</strong>
+          <p>Modelled saving on a $200 transfer</p>
+        </div>
+        <p className="scenario-note">This is a scenario, not an observed or realised saving. The point is to quantify sensitivity to the FX margin, not to claim that a 0.50pp reduction is automatically achievable.</p>
+      </section>
+
+      <section className="story-section story-scenario story-fee-scenario" aria-labelledby="fee-scenario-title">
+        <div className="story-section-heading">
+          <p className="eyebrow">08 / THE FEE SCENARIO</p>
+          <h2 id="fee-scenario-title" className="story-section-title">What if the visible fee moves instead?</h2>
+          <p className="story-deck">The same question can be asked of the part of the price customers see first.</p>
+        </div>
+        <div className="scenario-result">
+          <span>10% fee reduction</span>
+          <strong>≈ $0.89</strong>
+          <p>Modelled saving against the average observed pricing structure</p>
+        </div>
+        <p className="scenario-note">This is also a modelled scenario, not a forecast or realised customer saving. Comparing the two sensitivities helps frame the pricing discussion without implying that either lever is commercially preferable in every case.</p>
+      </section>
+
+      <section className="story-section story-tradeoff" aria-labelledby="tradeoff-title">
+        <div className="story-section-heading">
+          <p className="eyebrow">09 / THE TRADE-OFF</p>
+          <h2 id="tradeoff-title" className="story-section-title">Two levers. Different commercial consequences.</h2>
+        </div>
+        <div className="story-prose">
+          <p>Both the fee and FX margin affect customer cost, but they do not have identical economic or commercial implications. The analysis frames customer-cost sensitivity, corridor and provider variation, and pricing leverage.</p>
+          <p>It does not establish provider profitability, elasticity, optimal commercial pricing, causal customer behaviour, or whether a particular margin reduction is achievable.</p>
+        </div>
+        <p className="decision-statement">Use corridor-level pricing monitoring, cost decomposition and FX benchmarking to identify where pricing intervention is worth investigating.</p>
+      </section>
+
+      <section className="story-section operating-model" aria-labelledby="operating-title">
+        <p className="eyebrow">10 / FROM ANALYSIS TO OPERATING DECISION</p>
+        <h2 id="operating-title" className="story-section-title">A repeatable decision process.</h2>
+        <ol className="operating-steps">
+          {operatingSteps.map((step, index) => (
+            <li key={step}><span>0{index + 1}</span><p>{step}</p></li>
+          ))}
+        </ol>
+        <p className="operating-disclaimer">This is a proposed operating workflow, not a deployed production system.</p>
+      </section>
+
+      <section className="story-section story-limitations" aria-labelledby="limitations-title">
+        <div className="story-section-heading">
+          <p className="eyebrow">11 / LIMITATIONS</p>
+          <h2 id="limitations-title" className="story-section-title">What the evidence can—and cannot—say.</h2>
+        </div>
+        <ul>{limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul>
+      </section>
+
+      <section className="story-section technical-note" aria-labelledby="technical-title">
+        <div className="story-section-heading">
+          <p className="eyebrow">12 / TECHNICAL NOTE</p>
+          <h2 id="technical-title" className="story-section-title">The analytical machinery.</h2>
+        </div>
+        <div className="technical-summary">
+          <div><h3>Tools</h3><p>Python · SQL / DuckDB · Pandas · NumPy · Matplotlib / Seaborn · Jupyter · Git / GitHub</p></div>
+          <div><h3>Data</h3><p>World Bank Remittance Prices Worldwide · BIS exchange-rate data</p></div>
+        </div>
       </section>
 
       <footer className="story-close">
-        <p>“The interesting part of pricing is rarely the number on the surface.<br />It is the structure underneath it — and what changes when you move one part of it.”</p>
-        <div><a href="#findings">Explore the analysis <span aria-hidden="true">→</span></a><span className="story-repository" aria-disabled="true" title="Repository address has not been provided">View the project repository <span aria-hidden="true">→</span></span></div>
+        <blockquote>
+          <p>“The interesting part of pricing is rarely the number on the surface.</p>
+          <p>It is the structure underneath it — and what changes when you move one part of it.”</p>
+        </blockquote>
+        <div className="story-close-links">
+          <a href="#cost-picture">Explore the analysis <span aria-hidden="true">→</span></a>
+          <a href="https://github.com/Tejovanth111/remittance-fx-optimisation" target="_blank" rel="noopener noreferrer">View the project repository <span aria-hidden="true">↗</span></a>
+        </div>
       </footer>
     </article>
   );
